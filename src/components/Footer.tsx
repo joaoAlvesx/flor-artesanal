@@ -1,0 +1,136 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Facebook, 
+  Instagram, 
+  Mail, 
+  MapPin, 
+  Phone, 
+  MessageCircle 
+} from "lucide-react";
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="bg-gradient-earth border-t border-border">
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div className="space-y-4">
+            <h3 className="text-2xl font-artisan font-bold text-foreground">
+              Gosto do Mato
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Produtos artesanais autênticos do Pantanal. Tradição, qualidade 
+              e amor pela natureza em cada peça.
+            </p>
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                <Facebook className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                <Instagram className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-foreground">Navegação</h4>
+            <div className="space-y-2">
+              <a href="#home" className="block text-muted-foreground hover:text-primary transition-organic">
+                Início
+              </a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">
+                Produtos
+              </a>
+              <a href="#sobre" className="block text-muted-foreground hover:text-primary transition-organic">
+                Nossa História
+              </a>
+              <a href="#contato" className="block text-muted-foreground hover:text-primary transition-organic">
+                Contato
+              </a>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-foreground">Categorias</h4>
+            <div className="space-y-2">
+              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
+                Cestas
+              </a>
+              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
+                Bolsas
+              </a>
+              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
+                Cerâmica
+              </a>
+              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
+                Decoração
+              </a>
+              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
+                Bijuterias
+              </a>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-foreground">Contato</h4>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3 text-muted-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span className="text-sm">Corumbá, MS - Brasil</span>
+              </div>
+              <div className="flex items-center space-x-3 text-muted-foreground">
+                <Phone className="h-4 w-4 text-primary" />
+                <span className="text-sm">(67) 99999-9999</span>
+              </div>
+              <div className="flex items-center space-x-3 text-muted-foreground">
+                <Mail className="h-4 w-4 text-primary" />
+                <span className="text-sm">contato@gostodomato.com.br</span>
+              </div>
+            </div>
+            
+            <div className="pt-4">
+              <Badge variant="secondary" className="mb-2">
+                Frete Grátis
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                Para compras acima de R$ 150,00
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Separator className="my-8" />
+
+        {/* Bottom */}
+        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+          <div className="text-sm text-muted-foreground">
+            © {currentYear} Gosto do Mato. Todos os direitos reservados.
+          </div>
+          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+            <a href="#" className="hover:text-primary transition-organic">
+              Política de Privacidade
+            </a>
+            <a href="#" className="hover:text-primary transition-organic">
+              Termos de Uso
+            </a>
+            <a href="#" className="hover:text-primary transition-organic">
+              Trocas e Devoluções
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
