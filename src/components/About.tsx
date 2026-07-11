@@ -1,29 +1,28 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Leaf, Users, Award, Heart } from "lucide-react";
+import { Handshake, Users, Leaf, Heart } from "lucide-react";
 
 const About = () => {
   const values = [
     {
-      icon: Leaf,
-      title: "Sustentabilidade",
-      description: "Utilizamos apenas materiais naturais e sustentáveis, respeitando o meio ambiente.",
+      icon: Handshake,
+      title: "Direto do Produtor",
+      description: "Sem atravessadores. Você compra direto de quem faz, valorizando o trabalho artesanal.",
     },
     {
       icon: Users,
-      title: "Tradição Familiar",
-      description: "Técnicas passadas de geração em geração, preservando nossa cultura pantaneira.",
+      title: "Receitas de Família",
+      description: "Sabores preservados de geração em geração, com o carinho de quem cozinha em casa.",
     },
     {
-      icon: Award,
-      title: "Qualidade Premium",
-      description: "Cada peça é cuidadosamente selecionada e passa por rigoroso controle de qualidade.",
+      icon: Leaf,
+      title: "Ingredientes Naturais",
+      description: "Produtos feitos com ingredientes da região, sem conservantes nem aditivos industriais.",
     },
     {
       icon: Heart,
-      title: "Feito com Amor",
-      description: "Mais que um produto, cada peça carrega a história e carinho de nossos artesãos.",
+      title: "Sabor de Verdade",
+      description: "Aquele gosto de roça que a gente sente falta — autêntico, feito com tempo e cuidado.",
     },
   ];
 
@@ -37,32 +36,23 @@ const About = () => {
               Nossa História
             </Badge>
             <h2 className="text-4xl md:text-5xl font-artisan font-bold text-foreground mb-6">
-              Raízes que se
-              <span className="text-primary"> Espalham</span>
+              Do Produtor
+              <span className="text-primary"> pra Sua Mesa</span>
             </h2>
             <div className="space-y-6 text-muted-foreground leading-relaxed">
               <p>
-                No coração do Pantanal, onde o ipê amarelo colore a paisagem com sua 
-                beleza única, nasceu o <strong className="text-foreground">Gosto do Mato</strong>. 
-                Somos uma família que há três gerações preserva as tradições artesanais 
-                da nossa terra.
+                A <strong className="text-foreground">Gostudumatu</strong> nasceu da vontade de
+                facilitar o encontro entre quem faz e quem valoriza o verdadeiro sabor artesanal.
               </p>
               <p>
-                Cada produto que criamos conta uma história. Das cestas de palha tecidas 
-                sob a sombra das árvores nativas, aos potes de cerâmica moldados com o 
-                barro sagrado do Pantanal, tudo é feito com as mãos e o coração.
+                Sentimos falta de um lugar simples para achar os produtos feitos com carinho aqui
+                da nossa região — e, principalmente, para dar visibilidade a quem produz.
               </p>
               <p>
-                Nossa missão é levar um pedacinho desta terra mágica para sua casa, 
-                preservando não apenas o artesanato, mas também a cultura e os 
-                saberes ancestrais do nosso povo.
+                Aqui em <strong className="text-foreground">Jardim/MS</strong>, cercados pela
+                natureza do Pantanal, reunimos produtores locais que preservam receitas de família
+                e o gosto de verdade da roça.
               </p>
-            </div>
-            
-            <div className="mt-8">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Conheça Nossa Equipe
-              </Button>
             </div>
           </div>
 
@@ -70,8 +60,8 @@ const About = () => {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {values.map((value, index) => (
-                <Card 
-                  key={index} 
+                <Card
+                  key={index}
                   className="hover:shadow-natural transition-organic border border-border/50 bg-card/50 backdrop-blur-sm"
                 >
                   <CardContent className="p-6 text-center">
@@ -92,16 +82,16 @@ const About = () => {
             {/* Stats */}
             <div className="mt-12 grid grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold text-primary font-artisan">3+</div>
-                <div className="text-sm text-muted-foreground">Gerações</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary font-artisan">500+</div>
-                <div className="text-sm text-muted-foreground">Peças Criadas</div>
-              </div>
-              <div>
                 <div className="text-3xl font-bold text-primary font-artisan">100%</div>
                 <div className="text-sm text-muted-foreground">Artesanal</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-primary font-artisan">Local</div>
+                <div className="text-sm text-muted-foreground">Jardim/MS</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-primary font-artisan">Direto</div>
+                <div className="text-sm text-muted-foreground">do Produtor</div>
               </div>
             </div>
           </div>

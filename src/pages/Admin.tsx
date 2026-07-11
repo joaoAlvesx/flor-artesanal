@@ -151,7 +151,7 @@ const Admin = () => {
             <Link to="/">
               <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Ver site</Button>
             </Link>
-            <h1 className="font-artisan text-xl font-semibold">Admin · Gosto do Mato</h1>
+            <h1 className="font-artisan text-xl font-semibold">Admin · Gostudumatu</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />Sair
@@ -189,7 +189,7 @@ const Admin = () => {
               </div>
               <div>
                 <Label>Categoria *</Label>
-                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex: Cestas, Cerâmica..." />
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex: Mel, Queijos, Doce de Leite..." />
               </div>
               <div>
                 <Label>Descrição</Label>
