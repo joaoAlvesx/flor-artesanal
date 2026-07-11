@@ -28,14 +28,14 @@ const Hero = () => {
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl font-artisan font-bold text-background mb-6 leading-tight">
-            Tradição que
-            <span className="block text-primary"> Floresce</span>
+            Sabor que
+            <span className="block text-primary"> Vem da Roça</span>
           </h1>
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-background/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Produtos artesanais autênticos do Pantanal. Cada peça carrega a essência da nossa terra
-            e o carinho de nossas mãos.
+            Mel, queijos, doces e outras delícias artesanais de Jardim/MS.
+            Do produtor direto pra sua mesa.
           </p>
 
           {/* CTA Buttons */}
@@ -69,7 +69,7 @@ const Hero = () => {
             </div>
             <div className="flex items-center space-x-2 mb-4">
               <span className="w-2 h-2 bg-primary rounded-full"></span>
-              <span className="text-sm">Tradição Pantaneira</span>
+              <span className="text-sm">Direto do Produtor</span>
             </div>
           </div>
         </div>

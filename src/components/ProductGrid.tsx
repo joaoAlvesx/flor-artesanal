@@ -39,10 +39,10 @@ const ProductGrid = () => {
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4">Nossos Produtos</Badge>
           <h2 className="text-4xl md:text-5xl font-artisan font-bold text-foreground mb-6">
-            Artesanato do<span className="text-primary"> Coração</span>
+            Sabores do<span className="text-primary"> Nosso Chão</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Cada peça é única, criada com amor e técnicas tradicionais passadas de geração em geração.
+            Produtos artesanais feitos com receitas de família por produtores locais de Jardim/MS.
           </p>
         </div>
 

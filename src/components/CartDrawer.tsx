@@ -17,7 +17,7 @@ const CartDrawer = () => {
       (i) => `• ${i.quantity}x ${i.product.name} — ${formatPrice(i.product.price * i.quantity)}`
     );
     const message =
-      `Olá! Gostaria de fazer um pedido no *Gosto do Mato*:\n\n${lines.join("\n")}\n\n*Total: ${formatPrice(total)}*\n\nAguardo instruções para pagamento e entrega. Obrigado!`;
+      `Olá! Gostaria de fazer um pedido na *Gostudumatu*:\n\n${lines.join("\n")}\n\n*Total: ${formatPrice(total)}*\n\nAguardo instruções para pagamento e entrega. Obrigado!`;
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
     toast({ title: "Pedido enviado!", description: "Continue a conversa no WhatsApp." });

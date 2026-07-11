@@ -20,11 +20,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <h3 className="text-2xl font-artisan font-bold text-foreground">
-              Gosto do Mato
+              Gostudumatu
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Produtos artesanais autênticos do Pantanal. Tradição, qualidade 
-              e amor pela natureza em cada peça.
+              Comida artesanal feita por produtores locais de Jardim/MS. Do produtor
+              direto pra sua mesa, com o sabor de verdade da roça.
             </p>
             <div className="flex items-center space-x-3">
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
@@ -62,21 +62,12 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-semibold text-foreground">Categorias</h4>
             <div className="space-y-2">
-              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
-                Cestas
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
-                Bolsas
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
-                Cerâmica
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
-                Decoração
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-primary transition-organic">
-                Bijuterias
-              </a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Mel</a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Doce de Leite</a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Queijos</a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Geleias e Compotas</a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Rapadura e Melado</a>
+              <a href="#produtos" className="block text-muted-foreground hover:text-primary transition-organic">Bebidas Artesanais</a>
             </div>
           </div>
 
@@ -86,15 +77,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-muted-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-sm">Corumbá, MS - Brasil</span>
+                <span className="text-sm">Jardim, MS - Brasil</span>
               </div>
               <div className="flex items-center space-x-3 text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
-                <span className="text-sm">(67) 99999-9999</span>
+                <span className="text-sm">(67) 99685-0272</span>
               </div>
               <div className="flex items-center space-x-3 text-muted-foreground">
                 <Mail className="h-4 w-4 text-primary" />
-                <span className="text-sm">contato@gostodomato.com.br</span>
+                <span className="text-sm">contato@gostudumatu.com.br</span>
               </div>
             </div>
             
@@ -114,7 +105,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
           <div className="text-sm text-muted-foreground">
-            © {currentYear} Gosto do Mato. Todos os direitos reservados.
+            © {currentYear} Gostudumatu. Todos os direitos reservados.
           </div>
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-primary transition-organic">
