@@ -10,7 +10,7 @@ import { ArrowLeft, Plus, Trash2, Pencil, X, LogOut } from "lucide-react";
 import { loadProducts, saveProducts, formatPrice, type Product } from "@/lib/products";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_PASSWORD = "pantanal2026";
+const ADMIN_PASSWORD = "C@mbagem1815";
 const AUTH_KEY = "gostodomato:admin-auth";
 
 const emptyForm = {
