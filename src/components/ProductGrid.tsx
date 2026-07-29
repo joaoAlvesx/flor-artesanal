@@ -53,7 +53,6 @@ const ProductGrid = () => {
     toast({ title: "Lista de desejos", description: `${name} foi salvo.` });
   };
 
-  // Garante tratamento seguro para fotos
   const getImagesArray = (img: string | string[]): string[] => {
     if (Array.isArray(img)) return img;
     return img ? [img] : [];
@@ -72,7 +71,6 @@ const ProductGrid = () => {
           </p>
         </div>
 
-        {/* MENSAGEM SE AINDA NÃO HOUVER PRODUTOS */}
         {products.length === 0 ? (
           <div className="text-center py-12 bg-card/40 rounded-xl border border-border/40 max-w-lg mx-auto">
             <p className="text-muted-foreground text-base mb-2">Nenhum produto cadastrado no momento.</p>
@@ -81,7 +79,6 @@ const ProductGrid = () => {
             </p>
           </div>
         ) : (
-          /* VITRINE DE CARDS DE PRODUTOS */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => {
               const producer = producers.find((p) => p.id === product.producerId);
@@ -94,14 +91,15 @@ const ProductGrid = () => {
                     setSelectedProduct(product);
                     setCurrentImgIdx(0);
                   }}
-                  className="group hover:shadow-warm transition-organic bg-card/90 backdrop-blur-sm border border-border/50 cursor-pointer flex flex-col justify-between"
+                  className="group hover:shadow-warm transition-organic bg-card/90 backdrop-blur-sm border border-border/50 cursor-pointer flex flex-col justify-between overflow-hidden"
                 >
                   <div>
-                    <div className="relative overflow-hidden rounded-t-lg">
+                    {/* CONTAINER DA IMAGEM COM PROPORÇÃO 1:1 (QUADRADA) */}
+                    <div className="relative overflow-hidden rounded-t-lg bg-muted">
                       <img
                         src={imagesArray[0] || ""} 
                         alt={product.name}
-                        className="w-full h-64 object-cover group-hover:scale-105 transition-organic"
+                        className="w-full aspect-square object-cover group-hover:scale-105 transition-organic"
                       />
                       <div className="absolute top-3 left-3 space-y-1.5 flex flex-col items-start">
                         {product.isNew && <Badge className="bg-primary text-primary-foreground">Novo</Badge>}
@@ -129,7 +127,6 @@ const ProductGrid = () => {
                     </div>
 
                     <CardContent className="p-6">
-                      {/* Selo/Link para a página do Produtor se estiver vinculado */}
                       {producer && (
                         <Link 
                           to={`/produtor/${producer.slug}`}
@@ -175,7 +172,7 @@ const ProductGrid = () => {
           </div>
         )}
 
-        {/* POP-UP DE DETALHES DO PRODUTO */}
+        {/* MODAL COM PROPORÇÃO 4:3 */}
         <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
           {selectedProduct && (() => {
             const producer = producers.find((p) => p.id === selectedProduct.producerId);
@@ -183,11 +180,11 @@ const ProductGrid = () => {
 
             return (
               <DialogContent className="max-w-xl bg-card/95 border border-border/80 text-foreground rounded-lg p-0 overflow-hidden shadow-2xl">
-                <div className="relative">
+                <div className="relative bg-muted">
                   <img 
                     src={imagesArray[currentImgIdx] || ""} 
                     alt={selectedProduct.name} 
-                    className="w-full h-72 object-cover"
+                    className="w-full aspect-[4/3] object-cover"
                   />
                   <Button 
                     variant="ghost" 
