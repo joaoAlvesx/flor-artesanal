@@ -1,57 +1,68 @@
+## Plano: Área do Produtor (entrega enxuta)
 
-## Mudanças solicitadas
+### Objetivo
+Dar aos produtores uma experiência própria e completa dentro do marketplace, separando-os do fluxo de super admin e valorizando a história de cada um.
 
-### 1. Rebrand: "Gosto do Mato" → "Gostudumatu"
-- `index.html`: `<title>`, meta description, og/twitter tags
-- `src/components/Header.tsx`: logo/título
-- `src/components/Footer.tsx`: título e email (`contato@gostudumatu.com.br`)
-- `src/pages/Admin.tsx`: textos visíveis
-- Storage keys mantidos como estão (`gostodomato:*`) para não perder produtos já cadastrados no localStorage — apenas troca de rótulo visual. (Se preferir renomear as chaves e resetar, me avise.)
+### 1. Novo painel exclusivo do produtor
+Criar a rota `/painel` acessível apenas a produtores autenticados.
 
-### 2. Seção "Nossa História" (`src/components/About.tsx`)
-Novo texto (proposta):
-> A Gostudumatu nasceu da vontade de facilitar o encontro entre quem faz e quem valoriza o verdadeiro sabor artesanal. Sentimos falta de um lugar simples para achar os produtos feitos com carinho aqui da nossa região — e, principalmente, para dar visibilidade a quem produz. Aqui em Jardim/MS, cercados pela natureza do Pantanal, reunimos produtores locais que preservam receitas de família e o gosto de verdade da roça.
+````text
+/painel
+├── Meus Produtos      (CRUD de produtos da loja)
+├── Perfil da Loja     (dados públicos do produtor)
+└── Estatísticas       (indicadores simples)
+````
 
-Ajustes:
-- Título: "Raízes que se Espalham" → "Do Produtor pra Sua Mesa" (ou similar — abro para sua escolha)
-- Remover o botão "Conheça Nossa Equipe"
-- Ajustar os 4 "valores" para o contexto de comida artesanal:
-  - Sustentabilidade → **Direto do Produtor** (sem atravessadores)
-  - Tradição Familiar → **Receitas de Família**
-  - Qualidade Premium → **Ingredientes Naturais**
-  - Feito com Amor → **Sabor de Verdade**
+- Redirecionar produtores que hoje caem em `/admin` para `/painel`.
+- Manter `/admin` exclusivo para super admin.
+- Interface mais simples e direta, sem opções de criar outras contas.
 
-### 3. Localização (`src/components/Footer.tsx`)
-- "Corumbá, MS" → "Jardim, MS"
+### 2. Perfil da loja mais completo
+Expandir a tabela `producers` e o formulário com novos campos:
 
-### 4. Categorias de comidas (substituir as atuais)
-Categorias no Footer e no seed de produtos (`src/lib/products.ts`):
-- Mel
-- Doce de Leite
-- Queijos
-- Geleias e Compotas
-- Rapadura e Melado
-- Farinhas e Grãos
-- Conservas
-- Bebidas Artesanais (licores, cachaças, sucos)
+| Campo | Uso |
+|-------|-----|
+| `banner` | Imagem de capa na página pública |
+| `phone` | WhatsApp de contato do produtor |
+| `instagram` | Link para Instagram |
+| `bio` | Texto longo com a história da propriedade |
+| `location` | Cidade/região (já existe, mas reforçar) |
+| `image` | Foto do produtor/fazenda (já existe) |
 
-Também trocar os produtos-seed (cesta, bolsa, cerâmica, tapete, colar, luminária) por 6 comidas artesanais com novas imagens geradas (ex.: pote de mel, doce de leite de colher, queijo curado, geleia de pequi, rapadura, licor de pequi/bocaiuva).
+- Upload de imagem de banner no formulário.
+- Validação básica de URLs (Instagram) e telefone.
 
-### 5. Ajustes de tom em Hero e badges
-- Hero: manter estética, mas subtítulo passa a falar de "sabores artesanais do Pantanal" em vez de "peças".
-- Badge "Frete Grátis acima de R$ 150" — manter ou remover? (comida costuma ter frete por região; sugiro remover ou trocar por "Entrega em Jardim e região").
+### 3. Melhorias na página pública `/produtor/:slug`
+- Layout com banner no topo e foto redonda sobreposta.
+- Botão "Falar no WhatsApp" usando o número do produtor (com fallback para o número geral da Gostudumatu).
+- Link para Instagram, se cadastrado.
+- Exibição da localização e bio completa.
+- Grid de produtos mantido, com destaque para itens marcados como "novo".
 
-## Outras ideias (opcionais, me diga quais topa)
+### 4. Estatísticas simples do produtor
+Começar com indicadores que não exigem infraestrutura complexa:
 
-1. **Página/seção "Produtores"**: cada produto mostra quem fez (nome, foto, pequena bio). Fortalece o propósito de dar visibilidade a quem produz.
-2. **Filtro por categoria** no grid de produtos (chips clicáveis: Mel, Queijos, Doces...).
-3. **Selo "Da Semana"** ou "Produção Limitada" nos cards (mel só sai na safra, queijo tem cura, etc.).
-4. **Campo "Produtor" e "Origem" no admin** ao cadastrar produto, exibidos no card.
-5. **Mensagem do WhatsApp** já inclui a cidade do cliente ou pergunta sobre entrega/retirada em Jardim.
-6. **Paleta**: manter o ipê amarelo, mas talvez puxar tons um pouco mais "quentes/apetitosos" (mel, caramelo) já que o foco virou comida.
+- Quantidade de produtos ativos.
+- Quantidade de produtos marcados como "novo".
+- Data do último produto cadastrado.
+- (Opcional, se viável) Contador de cliques no botão WhatsApp da página do produtor.
 
-## Aguardo confirmação
-Confirma esse escopo? E me diz:
-- Quer que eu inclua as ideias 1–6 acima (quais)?
-- Manter frete grátis ou trocar por "Entrega em Jardim e região"?
-- Resetar produtos do localStorage ou preservar os já cadastrados?
+### Fora do escopo desta entrega
+- Sistema de pedidos/pagamentos (continua via WhatsApp).
+- Relatórios avançados de vendas.
+- Notificações push.
+- Alterações de preço em massa.
+
+### Critérios de aceitação
+- Produtor consegue fazer login e acessar `/painel`.
+- Produtor edita banner, foto, bio, WhatsApp, Instagram e localização.
+- Página pública reflete todas as informações cadastradas.
+- Super admin continua gerenciando produtores e produtos em `/admin`.
+
+### Arquivos esperados de envolvimento
+- `src/pages/ProducerPanel.tsx` (novo)
+- `src/pages/ProducerDetail.tsx` (ajustes visuais)
+- `src/lib/producers.ts` (novos campos e funções)
+- `src/App.tsx` (nova rota `/painel`)
+- `src/pages/Admin.tsx` (redirecionar produtores comuns)
+- Supabase: migration para novas colunas na tabela `producers`
