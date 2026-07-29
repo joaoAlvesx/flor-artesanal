@@ -23,7 +23,7 @@ const Header = () => {
             className="h-12 w-auto object-contain -ml-6 transition-transform group-hover:scale-105" 
           />
           <span className="font-artisan text-2xl font-bold text-foreground">
-            Gostu<span className="text-primary">dumatu</span>
+            Gosto<span className="text-primary">dumatu</span>
           </span>
         </Link>
 

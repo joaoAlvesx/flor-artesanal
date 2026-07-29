@@ -20,7 +20,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <h3 className="text-2xl font-artisan font-bold text-foreground">
-              Gostudumatu
+              Gostodumatu
             </h3>
             <p className="text-muted-foreground leading-relaxed">
               Comida artesanal feita por produtores locais de Jardim/MS. Do produtor
@@ -97,7 +97,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
           <div className="text-sm text-muted-foreground">
-            © {currentYear} Gostudumatu. Todos os direitos reservados.
+            © {currentYear} Gostodumatu. Todos os direitos reservados.
           </div>
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-primary transition-organic">
