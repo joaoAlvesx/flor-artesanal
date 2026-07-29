@@ -3,6 +3,14 @@ import { ArrowRight, Heart } from "lucide-react";
 import heroImage from "@/assets/hero-pantanal.jpg";
 
 const Hero = () => {
+  // Função para rolar suavemente até as seções
+  const handleScrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section id="home" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -40,9 +48,11 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            {/* Botão 1: Explorar Produtos */}
             <Button 
               size="lg" 
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-medium shadow-warm transition-organic"
+              onClick={() => handleScrollTo("produtos")}
             >
               Explorar Produtos
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -51,9 +61,10 @@ const Hero = () => {
             <Button 
               variant="outline" 
               size="lg"
-              className="border-background text-background hover:bg-background hover:text-foreground px-8 py-4 text-lg font-medium backdrop-blur-sm transition-organic"
+              className="border-background text-black bg-background px-8 py-4 text-lg font-medium backdrop-blur-sm transition-organic"
+              onClick={() => handleScrollTo("produtores")}
             >
-              Nossa História
+              Conhecer Produtores
             </Button>
           </div>
 
@@ -76,7 +87,7 @@ const Hero = () => {
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer" onClick={() => handleScrollTo("produtos")}>
         <div className="animate-bounce">
           <ArrowRight className="h-6 w-6 text-background/60 rotate-90" />
         </div>

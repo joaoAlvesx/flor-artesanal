@@ -1,66 +1,63 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Menu, X, Search } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import logoHeader from "@/assets/logo.svg";
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { count, openCart } = useCart();
+  const cart = useCart();
+
+  const totalCount = 
+    cart?.totalItems ?? 
+    cart?.items?.reduce((acc, item) => acc + (item.quantity || 1), 0) ?? 
+    0;
 
   return (
-    <header className="w-full bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-artisan font-semibold text-foreground">Gostudumatu</h1>
-          </div>
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
+        
+        <Link to="/" className="flex items-center space-x-2 group">
+          <img 
+            src={logoHeader} 
+            alt="Emblema Gostudumatu" 
+            className="h-12 w-auto object-contain -ml-6 transition-transform group-hover:scale-105" 
+          />
+          <span className="font-artisan text-2xl font-bold text-foreground">
+            Gostu<span className="text-primary">dumatu</span>
+          </span>
+        </Link>
 
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-foreground hover:text-primary transition-organic">Início</a>
-            <a href="#produtos" className="text-foreground hover:text-primary transition-organic">Produtos</a>
-            <a href="#sobre" className="text-foreground hover:text-primary transition-organic">Nossa História</a>
-            <a href="#contato" className="text-foreground hover:text-primary transition-organic">Contato</a>
-          </nav>
+        {/* Links de Navegação */}
+        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium absolute left-1/2 -translate-x-1/2">
+          <a href="/#produtores" className="transition-colors hover:text-primary text-foreground/80">
+            Produtores
+          </a>
+          <a href="/#produtos" className="transition-colors hover:text-primary text-foreground/80">
+            Produtos
+          </a>
+          <a href="/#sobre" className="transition-colors hover:text-primary text-foreground/80">
+            Sobre Nós
+          </a>
+        </nav>
 
-          <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="icon" className="text-foreground hover:text-primary">
-              <Search className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-foreground hover:text-primary relative"
-              onClick={openCart}
-              aria-label="Abrir carrinho"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {count}
+        {/* Botão do Carrinho */}
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative"
+            onClick={() => cart?.openCart()}
+            aria-label="Abrir carrinho"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {totalCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground animate-in zoom-in-50">
+                {totalCount}
               </span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-foreground hover:text-primary"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+            )}
+          </Button>
         </div>
 
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4 py-4 border-t border-border">
-            <div className="flex flex-col space-y-4">
-              <a href="#home" className="text-foreground hover:text-primary py-2" onClick={() => setIsMenuOpen(false)}>Início</a>
-              <a href="#produtos" className="text-foreground hover:text-primary py-2" onClick={() => setIsMenuOpen(false)}>Produtos</a>
-              <a href="#sobre" className="text-foreground hover:text-primary py-2" onClick={() => setIsMenuOpen(false)}>Nossa História</a>
-              <a href="#contato" className="text-foreground hover:text-primary py-2" onClick={() => setIsMenuOpen(false)}>Contato</a>
-            </div>
-          </nav>
-        )}
       </div>
     </header>
   );

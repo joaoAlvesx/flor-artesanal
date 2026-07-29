@@ -89,14 +89,6 @@ const Footer = () => {
               </div>
             </div>
             
-            <div className="pt-4">
-              <Badge variant="secondary" className="mb-2">
-                Frete Grátis
-              </Badge>
-              <p className="text-sm text-muted-foreground">
-                Para compras acima de R$ 150,00
-              </p>
-            </div>
           </div>
         </div>
 

@@ -6,135 +6,304 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Trash2, Pencil, X, LogOut } from "lucide-react";
-import { loadProducts, saveProducts, formatPrice, type Product } from "@/lib/products";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Plus, Trash2, Pencil, X, LogOut, Store, Package, UserCheck, KeyRound } from "lucide-react";
+import { loadProducts, saveProducts, formatPrice, deleteProductFromDatabase, supabase, type Product } from "@/lib/products";
+import { loadProducers, createProducerWithAccount, loadProducerByUserId, saveProducer, deleteProducer, type Producer } from "@/lib/producers";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_PASSWORD = "C@mbagem1815";
-const AUTH_KEY = "gostodomato:admin-auth";
 
-const emptyForm = {
+
+const emptyProductForm = {
   id: "",
   name: "",
   price: "",
   originalPrice: "",
-  image: "",
+  image: [] as string[],
   category: "",
   description: "",
   isNew: false,
+  producerId: "",
+};
+
+const emptyProducerCreateForm = {
+  name: "",
+  email: "",
+  password: "",
+  location: "",
+  bio: "",
+  image: "",
 };
 
 const Admin = () => {
   const { toast } = useToast();
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem(AUTH_KEY) === "1");
+  
+  // Estados de Sessão / Usuário Logado
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentProducer, setCurrentProducer] = useState<Producer | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  
+  // Login Form
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
+  // Dados do Banco
   const [products, setProducts] = useState<Product[]>([]);
-  const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [producers, setProducers] = useState<Producer[]>([]);
 
-  useEffect(() => {
-    if (authed) setProducts(loadProducts());
-  }, [authed]);
+  // Forms
+  const [productForm, setProductForm] = useState(emptyProductForm);
+  const [producerForm, setProducerForm] = useState(emptyProducerCreateForm);
+  const [myStoreForm, setMyStoreForm] = useState<Producer | null>(null);
+  
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(AUTH_KEY, "1");
-      setAuthed(true);
+  // Verifica a sessão atual no Supabase Auth
+const checkSession = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    setCurrentUser(session.user);
+
+    // CORREÇÃO: Checa se o usuário tem a etiqueta "super_admin" no metadata do Supabase
+    // ou se o e-mail bate com a variável do .env (como plano B)
+    const isSuper = 
+      session.user.user_metadata?.role === "super_admin" || 
+      session.user.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
+
+    setIsSuperAdmin(isSuper);
+
+    if (!isSuper) {
+      const myStore = await loadProducerByUserId(session.user.id);
+      setCurrentProducer(myStore);
+      setMyStoreForm(myStore);
+    }
+    fetchData(session.user.id, isSuper);
+  } else {
+    setCurrentUser(null);
+    setCurrentProducer(null);
+  }
+};
+
+  const fetchData = async (userId: string, isSuper: boolean) => {
+    if (isSuper) {
+      const [allProducts, allProducers] = await Promise.all([
+        loadProducts(),
+        loadProducers(),
+      ]);
+      setProducts(allProducts);
+      setProducers(allProducers);
     } else {
-      toast({ title: "Senha incorreta", variant: "destructive" });
+      const myStore = await loadProducerByUserId(userId);
+      if (myStore) {
+        const myProducts = await loadProducts(myStore.id);
+        setProducts(myProducts);
+      }
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem(AUTH_KEY);
-    setAuthed(false);
-    setPassword("");
-  };
+  useEffect(() => {
+    checkSession();
 
-  const resetForm = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-  };
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      checkSession();
+    });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, image: reader.result as string }));
-    reader.readAsDataURL(file);
-  };
+    return () => authListener.subscription.unsubscribe();
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.image || !form.category) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast({ title: "Erro ao entrar", description: "Verifique o e-mail e a senha digitados.", variant: "destructive" });
+    } else {
+      toast({ title: "Bem-vindo de volta!" });
+      checkSession();
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+    setCurrentProducer(null);
+    setEmail("");
+    setPassword("");
+    toast({ title: "Sessão encerrada" });
+  };
+
+  // --- LÓGICA DE PRODUTOS ---
+  const resetProductForm = () => {
+    setProductForm(emptyProductForm);
+    setEditingProductId(null);
+  };
+
+  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const filesArray = Array.from(files);
+    const loadedImages: string[] = [];
+
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        loadedImages.push(reader.result as string);
+        if (loadedImages.length === filesArray.length) {
+          setProductForm((f) => ({ ...f, image: [...f.image, ...loadedImages] }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleProductSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.price || productForm.image.length === 0 || !productForm.category) {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
     }
+
+    // Se for produtor comum, força a associação com o ID da loja dele
+    const targetProducerId = isSuperAdmin ? (productForm.producerId || undefined) : currentProducer?.id;
+
     const product: Product = {
-      id: editingId ?? crypto.randomUUID(),
-      name: form.name,
-      price: parseFloat(form.price),
-      originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : undefined,
-      image: form.image,
-      category: form.category,
-      description: form.description,
-      isNew: form.isNew,
+      id: editingProductId ?? crypto.randomUUID(),
+      name: productForm.name,
+      price: parseFloat(productForm.price),
+      originalPrice: productForm.originalPrice ? parseFloat(productForm.originalPrice) : undefined,
+      image: productForm.image,
+      category: productForm.category,
+      description: productForm.description,
+      isNew: productForm.isNew,
+      producerId: targetProducerId,
     };
-    const next = editingId
-      ? products.map((p) => (p.id === editingId ? product : p))
-      : [product, ...products];
-    setProducts(next);
-    saveProducts(next);
-    toast({ title: editingId ? "Produto atualizado" : "Produto adicionado" });
-    resetForm();
+
+    const success = await saveProducts(product);
+    if (success) {
+      if (currentUser) fetchData(currentUser.id, isSuperAdmin);
+      toast({ title: editingProductId ? "Produto atualizado" : "Produto adicionado" });
+      resetProductForm();
+    } else {
+      toast({ title: "Erro ao salvar produto", variant: "destructive" });
+    }
   };
 
-  const handleEdit = (p: Product) => {
-    setEditingId(p.id);
-    setForm({
+  const handleProductEdit = (p: Product) => {
+    setEditingProductId(p.id);
+    setProductForm({
       id: p.id,
       name: p.name,
       price: String(p.price),
       originalPrice: p.originalPrice ? String(p.originalPrice) : "",
-      image: p.image,
+      image: p.image || [],
       category: p.category,
-      description: p.description,
+      description: p.description || "",
       isNew: !!p.isNew,
+      producerId: p.producerId || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("Remover este produto?")) return;
-    const next = products.filter((p) => p.id !== id);
-    setProducts(next);
-    saveProducts(next);
-    toast({ title: "Produto removido" });
+  const handleProductDelete = async (id: string) => {
+    if (!confirm("Remover este produto permanentemente?")) return;
+    const success = await deleteProductFromDatabase(id);
+    if (success) {
+      if (currentUser) fetchData(currentUser.id, isSuperAdmin);
+      toast({ title: "Produto removido" });
+    } else {
+      toast({ title: "Erro ao remover produto", variant: "destructive" });
+    }
   };
 
-  if (!authed) {
+  // --- LÓGICA DE SUPER ADMIN: CRIAR NOVO PRODUTOR COM CONTA ---
+  const handleCreateProducerAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!producerForm.name || !producerForm.email || !producerForm.password) {
+      toast({ title: "Nome, E-mail e Senha são obrigatórios", variant: "destructive" });
+      return;
+    }
+
+    const res = await createProducerWithAccount(producerForm);
+    if (res.success) {
+      toast({ title: "Conta e Loja criadas com sucesso!" });
+      setProducerForm(emptyProducerCreateForm);
+      if (currentUser) fetchData(currentUser.id, isSuperAdmin);
+    } else {
+      toast({ title: "Erro ao criar produtor", description: res.message, variant: "destructive" });
+    }
+  };
+
+  // --- LÓGICA DO PRODUTOR: EDITAR PRÓPRIA LOJA E SENHA ---
+  const handleSaveMyStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!myStoreForm) return;
+
+    const success = await saveProducer(myStoreForm);
+    if (success) {
+      toast({ title: "Informações da loja salvas com sucesso!" });
+      if (currentUser) fetchData(currentUser.id, isSuperAdmin);
+    } else {
+      toast({ title: "Erro ao atualizar dados da loja", variant: "destructive" });
+    }
+  };
+
+  const handleChangeMyPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      toast({ title: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast({ title: "Erro ao alterar senha", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sua senha foi alterada com sucesso!" });
+      setNewPassword("");
+    }
+  };
+
+  // TELA DE LOGIN (Se não estiver autenticado)
+  if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-earth px-4">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="font-artisan text-2xl">Área do Administrador</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="font-artisan text-3xl text-foreground">Acesso ao Painel</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Entre com seu e-mail e senha de produtor</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
               <div>
                 <Label htmlFor="pw">Senha</Label>
                 <Input
                   id="pw"
                   type="password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  autoFocus
+                  required
                 />
               </div>
               <Button type="submit" className="w-full">Entrar</Button>
-              <Link to="/" className="block text-center text-sm text-muted-foreground hover:text-primary">
-                ← Voltar ao site
+              <Link to="/" className="block text-center text-sm text-muted-foreground hover:text-primary pt-2">
+                ← Voltar ao site público
               </Link>
             </form>
           </CardContent>
@@ -151,7 +320,12 @@ const Admin = () => {
             <Link to="/">
               <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Ver site</Button>
             </Link>
-            <h1 className="font-artisan text-xl font-semibold">Admin · Gostudumatu</h1>
+            <div>
+              <h1 className="font-artisan text-xl font-semibold">
+                {isSuperAdmin ? "Painel Super Admin" : (currentProducer?.name || "Painel do Produtor")}
+              </h1>
+              <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />Sair
@@ -159,89 +333,322 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 grid lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-artisan">
-              {editingId ? "Editar produto" : "Adicionar produto"}
-            </CardTitle>
-            {editingId && (
-              <Button variant="ghost" size="sm" onClick={resetForm}>
-                <X className="h-4 w-4 mr-1" />Cancelar
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label>Nome *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Preço (R$) *</Label>
-                  <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Preço original</Label>
-                  <Input type="number" step="0.01" value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} />
-                </div>
-              </div>
-              <div>
-                <Label>Categoria *</Label>
-                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex: Mel, Queijos, Doce de Leite..." />
-              </div>
-              <div>
-                <Label>Descrição</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
-              </div>
-              <div>
-                <Label>Imagem *</Label>
-                <Input type="file" accept="image/*" onChange={handleImageUpload} />
-                {form.image && (
-                  <img src={form.image} alt="preview" className="mt-2 w-32 h-32 object-cover rounded-md border border-border" />
-                )}
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.isNew} onChange={(e) => setForm({ ...form, isNew: e.target.checked })} />
-                <span className="text-sm">Marcar como novidade</span>
-              </label>
-              <Button type="submit" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                {editingId ? "Salvar alterações" : "Adicionar produto"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <main className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="products" className="space-y-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="h-4 w-4" /> Seus Produtos
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              {isSuperAdmin ? <UserCheck className="h-4 w-4" /> : <Store className="h-4 w-4" />}
+              {isSuperAdmin ? "Gerenciar Produtores" : "Dados da Sua Loja"}
+            </TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-artisan">Produtos ({products.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 max-h-[70vh] overflow-y-auto">
-            {products.map((p) => (
-              <div key={p.id} className="flex gap-3 p-3 rounded-lg border border-border hover:shadow-soft transition-organic">
-                <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded-md" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium truncate">{p.name}</h4>
-                    {p.isNew && <Badge className="bg-primary text-primary-foreground text-xs">Novo</Badge>}
+          {/* TAB 1: MEUS PRODUTOS */}
+          <TabsContent value="products" className="grid lg:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="font-artisan">
+                  {editingProductId ? "Editar produto" : "Adicionar novo produto"}
+                </CardTitle>
+                {editingProductId && (
+                  <Button variant="ghost" size="sm" onClick={resetProductForm}>
+                    <X className="h-4 w-4 mr-1" />Cancelar
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleProductSubmit} className="space-y-4">
+                  <div>
+                    <Label>Nome do Produto *</Label>
+                    <Input value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} />
                   </div>
-                  <p className="text-sm text-muted-foreground">{p.category}</p>
-                  <p className="text-primary font-semibold text-sm">{formatPrice(p.price)}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => handleEdit(p)}>
-                    <Pencil className="h-4 w-4" />
+
+                  {/* Se for Super Admin, permite escolher para qual produtor vai o produto */}
+                  {isSuperAdmin && (
+                    <div>
+                      <Label>Vincular ao Produtor / Loja</Label>
+                      <select
+                        value={productForm.producerId}
+                        onChange={(e) => setProductForm({ ...productForm, producerId: e.target.value })}
+                        className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background text-sm"
+                      >
+                        <option value="">Nenhum / Próprio da Gostudumatu</option>
+                        {producers.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Preço (R$) *</Label>
+                      <Input type="number" step="0.01" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Preço original</Label>
+                      <Input type="number" step="0.01" value={productForm.originalPrice} onChange={(e) => setProductForm({ ...productForm, originalPrice: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Categoria *</Label>
+                    <Input value={productForm.category} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })} placeholder="Ex: Queijos, Mel, Doces..." />
+                  </div>
+
+                  <div>
+                    <Label>Descrição</Label>
+                    <Textarea value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} rows={3} />
+                  </div>
+
+                  <div>
+                    <Label>Imagens do Produto * (Selecione uma ou mais)</Label>
+                    <Input type="file" accept="image/*" multiple onChange={handleProductImageUpload} />
+                    {productForm.image && productForm.image.length > 0 && (
+                      <div className="mt-2 grid grid-cols-4 gap-2">
+                        {productForm.image.map((img, idx) => (
+                          <div key={idx} className="relative group">
+                            <img src={img} alt="preview" className="w-full h-20 object-cover rounded-md border border-border" />
+                            <button
+                              type="button"
+                              onClick={() => setProductForm(f => ({ ...f, image: f.image.filter((_, i) => i !== idx) }))}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={productForm.isNew} onChange={(e) => setProductForm({ ...productForm, isNew: e.target.checked })} />
+                    <span className="text-sm">Marcar como novidade</span>
+                  </label>
+
+                  <Button type="submit" className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {editingProductId ? "Salvar alterações" : "Cadastrar Produto"}
                   </Button>
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(p.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-artisan">Produtos no seu Catálogo ({products.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 max-h-[70vh] overflow-y-auto">
+                {products.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-8">Você ainda não possui produtos cadastrados.</p>
+                ) : (
+                  products.map((p) => (
+                    <div key={p.id} className="flex gap-3 p-3 rounded-lg border border-border hover:shadow-soft transition-organic">
+                      <img src={p.image && p.image[0] ? p.image[0] : ""} alt={p.name} className="w-16 h-16 object-cover rounded-md" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium truncate">{p.name}</h4>
+                          {p.isNew && <Badge className="bg-primary text-primary-foreground text-xs">Novo</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{p.category}</p>
+                        <p className="text-primary font-semibold text-sm">{formatPrice(p.price)}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => handleProductEdit(p)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleProductDelete(p.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 2: CONFIGURAÇÕES DA LOJA OU SUPER ADMIN */}
+          <TabsContent value="settings" className="space-y-8">
+            {isSuperAdmin ? (
+              /* VISÃO DO SUPER ADMIN: CRIAR NOVAS CONTAS DE PRODUTORES */
+              <div className="grid lg:grid-cols-2 gap-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-artisan">Cadastrar Novo Produtor (Gerar Acesso)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleCreateProducerAccount} className="space-y-4">
+                      <div>
+                        <Label>Nome do Produtor / Sítio *</Label>
+                        <Input 
+                          value={producerForm.name} 
+                          onChange={(e) => setProducerForm({ ...producerForm, name: e.target.value })} 
+                          placeholder="Ex: Sítio Vista Alegre" 
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>E-mail de Acesso *</Label>
+                          <Input 
+                            type="email"
+                            value={producerForm.email} 
+                            onChange={(e) => setProducerForm({ ...producerForm, email: e.target.value })} 
+                            placeholder="produtor@email.com" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Senha Inicial *</Label>
+                          <Input 
+                            type="text"
+                            value={producerForm.password} 
+                            onChange={(e) => setProducerForm({ ...producerForm, password: e.target.value })} 
+                            placeholder="••••••••" 
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Localização</Label>
+                        <Input 
+                          value={producerForm.location} 
+                          onChange={(e) => setProducerForm({ ...producerForm, location: e.target.value })} 
+                          placeholder="Ex: Zona Rural, Jardim/MS" 
+                        />
+                      </div>
+
+                      <div>
+                        <Label>História do Produtor</Label>
+                        <Textarea 
+                          value={producerForm.bio} 
+                          onChange={(e) => setProducerForm({ ...producerForm, bio: e.target.value })} 
+                          rows={3}
+                        />
+                      </div>
+
+                      <Button type="submit" className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Produtor e Liberar Login
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-artisan">Produtores Cadastrados ({producers.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {producers.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <div>
+                          <h4 className="font-medium">{p.name}</h4>
+                          <p className="text-xs text-muted-foreground">{p.location || "Sem local"}</p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteProducer(p.id).then(() => checkSession())}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            ) : (
+              /* VISÃO DO PRODUTOR COMUM: EDITAR SUAS PRÓPRIAS INFORMAÇÕES E SENHA */
+              <div className="grid lg:grid-cols-2 gap-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-artisan">Dados do Seu Sítio / Loja</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {myStoreForm ? (
+                      <form onSubmit={handleSaveMyStore} className="space-y-4">
+                        <div>
+                          <Label>Nome da Propriedade / Loja</Label>
+                          <Input 
+                            value={myStoreForm.name} 
+                            onChange={(e) => setMyStoreForm({ ...myStoreForm, name: e.target.value })} 
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Localização</Label>
+                          <Input 
+                            value={myStoreForm.location || ""} 
+                            onChange={(e) => setMyStoreForm({ ...myStoreForm, location: e.target.value })} 
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Sua História / Biografia</Label>
+                          <Textarea 
+                            value={myStoreForm.bio || ""} 
+                            onChange={(e) => setMyStoreForm({ ...myStoreForm, bio: e.target.value })} 
+                            rows={4}
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Foto do Produtor ou Propriedade</Label>
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = () => setMyStoreForm({ ...myStoreForm, image: reader.result as string });
+                              reader.readAsDataURL(file);
+                            }} 
+                          />
+                          {myStoreForm.image && (
+                            <img src={myStoreForm.image} alt="preview" className="mt-2 w-24 h-24 object-cover rounded-md" />
+                          )}
+                        </div>
+
+                        <Button type="submit" className="w-full">Salvar Dados da Loja</Button>
+                      </form>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">Sua conta ainda não possui uma loja associada.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Bloco de Trocar Senha */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-artisan flex items-center gap-2">
+                      <KeyRound className="h-5 w-5 text-primary" /> Alterar Sua Senha
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleChangeMyPassword} className="space-y-4">
+                      <div>
+                        <Label>Nova Senha</Label>
+                        <Input 
+                          type="password" 
+                          placeholder="Digite a nova senha" 
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                      </div>
+                      <Button type="submit" variant="outline" className="w-full">
+                        Atualizar Senha
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

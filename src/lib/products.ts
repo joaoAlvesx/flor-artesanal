@@ -1,48 +1,104 @@
-import melImg from "@/assets/mel-artesanal.jpg";
-import doceLeiteImg from "@/assets/doce-de-leite.jpg";
-import queijoImg from "@/assets/queijo-artesanal.jpg";
-import geleiaImg from "@/assets/geleia-pequi.jpg";
-import rapaduraImg from "@/assets/rapadura.jpg";
-import licorImg from "@/assets/licor-artesanal.jpg";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Product = {
   id: string;
   name: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  image: string[];
   category: string;
   description: string;
   isNew?: boolean;
+  producerId?: string; // NOVO: Vínculo opcional com o produtor
 };
 
-const STORAGE_KEY = "gostodomato:products";
-
-const seedProducts: Product[] = [
-  { id: "1", name: "Mel Silvestre Puro", price: 38, originalPrice: 45, image: melImg, category: "Mel", description: "Mel puro colhido de abelhas nativas da região de Jardim/MS", isNew: true },
-  { id: "2", name: "Doce de Leite Cremoso", price: 28, image: doceLeiteImg, category: "Doce de Leite", description: "Doce de leite artesanal cozido lentamente no tacho de cobre" },
-  { id: "3", name: "Queijo Artesanal Curado", price: 65, image: queijoImg, category: "Queijos", description: "Queijo curado maturado por 30 dias, receita tradicional pantaneira" },
-  { id: "4", name: "Geleia de Pequi", price: 32, originalPrice: 38, image: geleiaImg, category: "Geleias e Compotas", description: "Geleia artesanal feita com pequi fresco do cerrado", isNew: true },
-  { id: "5", name: "Rapadura de Cana", price: 18, image: rapaduraImg, category: "Rapadura e Melado", description: "Rapadura pura feita da cana moída no engenho local" },
-  { id: "6", name: "Licor de Bocaiuva", price: 55, image: licorImg, category: "Bebidas Artesanais", description: "Licor artesanal com frutas nativas do Pantanal", isNew: true },
-];
-
-export function loadProducts(): Product[] {
+// Carrega os produtos (pode filtrar por produtor específico se passar o producerId)
+export async function loadProducts(producerId?: string): Promise<Product[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seedProducts));
-      return seedProducts;
+    let query = supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (producerId) {
+      query = query.eq('producer_id', producerId);
     }
-    return JSON.parse(raw);
-  } catch {
-    return seedProducts;
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    return data.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      originalPrice: p.original_price ? Number(p.original_price) : undefined,
+      image: p.image || [],
+      category: p.category,
+      description: p.description || "",
+      isNew: p.is_new,
+      producerId: p.producer_id,
+    }));
+  } catch (error) {
+    console.error("Erro ao carregar produtos do Supabase:", error);
+    return [];
   }
 }
 
-export function saveProducts(products: Product[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  window.dispatchEvent(new Event("products:updated"));
+// Salva ou edita um produto no Supabase
+export async function saveProducts(product: Product): Promise<boolean> {
+  try {
+    const databaseData = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      original_price: product.originalPrice,
+      image: product.image,
+      category: product.category,
+      description: product.description,
+      is_new: product.isNew,
+      producer_id: product.producerId || null,
+    };
+
+    const { error } = await supabase
+      .from('products')
+      .upsert(databaseData, { onConflict: 'id' });
+
+    if (error) throw error;
+    
+    window.dispatchEvent(new Event("products:updated"));
+    return true;
+  } catch (error) {
+    console.error("Erro ao salvar produto no Supabase:", error);
+    return false;
+  }
+}
+
+// Deleta um produto
+export async function deleteProductFromDatabase(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    window.dispatchEvent(new Event("products:updated"));
+    return true;
+  } catch (error) {
+    console.error("Erro ao deletar produto no Supabase:", error);
+    return false;
+  }
 }
 
 export function formatPrice(value: number) {
