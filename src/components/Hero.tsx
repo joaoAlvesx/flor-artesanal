@@ -42,7 +42,7 @@ const Hero = () => {
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-background/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Mel, queijos, doces e outras delícias artesanais de Jardim/MS.
+            Mel, queijos, doces e outras delícias artesanais do Mato Grosso do Sul.
             Do produtor direto pra sua mesa.
           </p>
 

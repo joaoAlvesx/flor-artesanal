@@ -3,17 +3,15 @@ import { useParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowLeft, MapPin, Store, ShoppingCart, Star, X, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Store, ShoppingCart, Star, X } from "lucide-react";
 import { loadProducerBySlug, type Producer } from "@/lib/producers";
 import { loadProducts, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/hooks/use-toast";
-
-// Imagem de fundo da paisagem
-import bgNature from "@/assets/hero-pantanal.jpg";
 
 const ProducerDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -52,279 +50,244 @@ const ProducerDetail = () => {
     openCart();
   };
 
+  // Garante tratamento seguro para fotos (mesmo helper do ProductGrid)
+  const getImagesArray = (img: string | string[]): string[] => {
+    if (Array.isArray(img)) return img;
+    return img ? [img] : [];
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-900 flex flex-col items-center justify-center text-amber-100">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
-        <p className="font-artisan text-xl tracking-wide">Carregando história do produtor...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground animate-pulse">Carregando história do produtor...</p>
       </div>
     );
   }
 
   if (!producer) {
     return (
-      <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-        <Header />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <h2 className="text-3xl font-artisan font-bold mb-4">Produtor não encontrado</h2>
-          <p className="text-neutral-400 mb-6">Não foi possível encontrar as informações deste produtor.</p>
-          <Link to="/">
-            <Button className="bg-amber-700 hover:bg-amber-800 text-white">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao início
-            </Button>
-          </Link>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
+        <h2 className="text-2xl font-artisan font-bold mb-4">Produtor não encontrado</h2>
+        <Link to="/">
+          <Button><ArrowLeft className="h-4 w-4 mr-2" />Voltar ao início</Button>
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen font-sans bg-neutral-900 text-[#3D3028] antialiased">
+    <div className="min-h-screen bg-background">
       <Header />
       <CartDrawer />
 
-      {/* 1. IMAGEM DE FUNDO FIXA DA PAISAGEM */}
-      <div className="fixed inset-0 z-0">
-        <img
-          src={bgNature}
-          alt="Fundo Pantanal"
-          className="w-full h-full object-cover brightness-[0.35]"
-        />
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
-      </div>
+      <main className="pb-24">
+        {/* Cabeçalho / Hero do Produtor */}
+        <section className="bg-gradient-earth py-16 border-b border-border/50">
+          <div className="container mx-auto px-4">
+            <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para a página inicial
+            </Link>
 
-      {/* 2. CONTEÚDO DA PÁGINA */}
-      <main className="relative z-10 container mx-auto px-4 py-8 md:py-12">
-        {/* Botão de Voltar */}
-        <Link 
-          to="/" 
-          className="inline-flex items-center text-sm font-medium text-white/80 hover:text-white mb-6 transition-colors bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar para a página inicial
-        </Link>
+            <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+              {producer.image ? (
+                <img 
+                  src={producer.image} 
+                  alt={producer.name} 
+                  className="w-40 h-40 md:w-48 md:h-48 object-cover rounded-full border-4 border-primary/20 shadow-warm"
+                />
+              ) : (
+                <div className="w-40 h-40 md:w-48 md:h-48 bg-muted rounded-full flex items-center justify-center text-muted-foreground border-4 border-border">
+                  <Store className="h-16 w-16" />
+                </div>
+              )}
 
-        {/* CARTÃO CENTRAL FLUTUANTE EM TOM PALHA/CREME */}
-        <div className="max-w-6xl mx-auto bg-[#F4EFE6]/95 backdrop-blur-md rounded-3xl p-6 md:p-12 shadow-2xl border border-amber-200/40">
-          
-          {/* HERÓI DO PRODUTOR */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-12">
-            
-            {/* Lado Esquerdo: Imagem/Logo no Box Branco */}
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-amber-200/60 w-full max-w-sm aspect-square flex items-center justify-center relative overflow-hidden group">
-                {producer.image ? (
-                  <img 
-                    src={producer.image} 
-                    alt={producer.name} 
-                    className="max-h-full max-w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-amber-900/40 space-y-2">
-                    <Store className="h-16 w-16" />
-                    <span className="font-artisan text-2xl font-bold text-amber-900 text-center">
-                      {producer.name}
-                    </span>
+              <div className="flex-1 text-center md:text-left space-y-4">
+                <Badge variant="secondary" className="mb-2">Produtor Local</Badge>
+                <h1 className="text-4xl md:text-5xl font-artisan font-bold text-foreground">
+                  {producer.name}
+                </h1>
+                
+                {producer.location && (
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-black font-medium">
+                    <MapPin className="h-4 w-4" />
+                    <span>{producer.location}</span>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Lado Direito: Informações */}
-            <div className="lg:col-span-7 space-y-4">
-              <span className="text-sm font-semibold text-amber-800 uppercase tracking-widest">
-                Produtor Local
-              </span>
-
-              <h1 className="text-4xl md:text-5xl font-artisan font-bold text-[#2A1E17]">
-                {producer.name}
-              </h1>
-
-              {producer.location && (
-                <div className="flex items-center text-amber-900/90 font-medium text-sm md:text-base">
-                  <MapPin className="w-4 h-4 mr-1 text-amber-700 fill-amber-700/20" />
-                  <span>{producer.location}</span>
-                </div>
-              )}
-
-              <p className="text-[#524338] leading-relaxed text-base md:text-lg pt-2">
-                {producer.bio || "Este produtor ainda não cadastrou sua história detalhada."}
-              </p>
-            </div>
-          </div>
-
-          {/* VITRINE DE PRODUTOS */}
-          <div className="pt-8 border-t border-amber-900/10">
-            <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-artisan font-bold text-[#2A1E17]">
-                Produtos de <span className="text-amber-700">{producer.name}</span>
-              </h2>
-              <p className="text-[#6A5A4D] text-sm md:text-base">
-                Confira tudo o que é produzido artesanalmente nesta propriedade.
-              </p>
-            </div>
-
-            {products.length === 0 ? (
-              <div className="text-center py-12 bg-[#FAF7F2] rounded-2xl border border-dashed border-amber-300/60">
-                <p className="text-amber-900/70 font-medium">
-                  Nenhum produto cadastrado para este produtor no momento.
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-3xl pt-2">
+                  {producer.bio || "Este produtor ainda não cadastrou sua história detalhada."}
                 </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((product) => {
-                  const firstImg = Array.isArray(product.image) && product.image[0] ? product.image[0] : "";
+            </div>
+          </div>
+        </section>
 
-                  return (
-                    <div 
-                      key={product.id} 
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setCurrentImgIdx(0);
-                      }}
-                      className="bg-[#FAF7F2] rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-amber-200/50 transition-all duration-300 flex flex-col group cursor-pointer"
-                    >
-                      {/* Imagem + Selo da Categoria */}
-                      <div className="relative h-48 sm:h-52 overflow-hidden bg-amber-100/50">
-                        {firstImg ? (
-                          <img
-                            src={firstImg} 
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-amber-800/40 text-sm">
-                            Sem imagem
-                          </div>
-                        )}
-
-                        {/* Selo/Tag no Canto Superior */}
-                        {product.category && (
-                          <span className="absolute top-3 right-3 bg-[#6A4E3A] text-amber-50 text-xs font-semibold px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm border border-amber-300/30">
-                            {product.category}
-                          </span>
-                        )}
-
-                        {product.isNew && (
-                          <span className="absolute top-3 left-3 bg-amber-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-md">
-                            Novo
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Conteúdo do Card */}
-                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                        <div>
-                          <div className="flex items-center space-x-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="h-3.5 w-3.5 text-amber-600 fill-amber-500" />
-                            ))}
-                          </div>
-
-                          <h3 className="font-artisan text-xl font-bold text-[#2A1E17] mb-1 group-hover:text-amber-800 transition-colors line-clamp-1">
-                            {product.name}
-                          </h3>
-
-                          {product.description && (
-                            <p className="text-xs text-[#6A5A4D] line-clamp-2 mb-2">
-                              {product.description}
-                            </p>
-                          )}
-
-                          <p className="text-lg font-semibold text-amber-900">
-                            {formatPrice(product.price)}
-                          </p>
-                        </div>
-
-                        {/* Botão de Adicionar */}
-                        <Button 
-                          size="sm"
-                          className="w-full bg-[#3D3028] hover:bg-[#2A1E17] text-amber-50 gap-2 rounded-xl transition-colors"
-                          onClick={(e) => handleAddToCart(product, e)}
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                          Adicionar
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        {/* Vitrine de Produtos deste Produtor */}
+        <section className="container mx-auto px-4 py-16">
+          <div className="mb-10">
+            <h2 className="text-3xl font-artisan font-bold text-foreground">
+              Produtos de <span className="text-primary">{producer.name}</span>
+            </h2>
+            <p className="text-muted-foreground">Confira tudo o que é produzido artesanalmente nesta propriedade.</p>
           </div>
 
-        </div>
-      </main>
+          {products.length === 0 ? (
+            <Card className="p-12 text-center bg-card/50">
+              <p className="text-muted-foreground">Nenhum produto cadastrado para este produtor no momento.</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => {
+                const imagesArray = getImagesArray(product.image);
 
-      {/* MODAL DE DETALHES DO PRODUTO */}
-      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
-        {selectedProduct && (
-          <DialogContent className="max-w-xl bg-[#FAF7F2] border border-amber-200/80 text-[#2A1E17] rounded-2xl p-0 overflow-hidden shadow-2xl">
-            <div className="relative bg-neutral-200">
-              <img 
-                src={selectedProduct.image && selectedProduct.image[currentImgIdx] ? selectedProduct.image[currentImgIdx] : ""} 
-                alt={selectedProduct.name} 
-                className="w-full h-72 object-cover"
-              />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full h-8 w-8 z-50"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+                return (
+                  <Card 
+                    key={product.id} 
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setCurrentImgIdx(0);
+                    }}
+                    className="group hover:shadow-warm transition-organic bg-card/90 backdrop-blur-sm border border-border/50 cursor-pointer flex flex-col justify-between overflow-hidden"
+                  >
+                    <div>
+                      {/* CONTAINER DA IMAGEM COM PROPORÇÃO 1:1 (QUADRADA) */}
+                      <div className="relative overflow-hidden rounded-t-lg bg-muted">
+                        <img
+                          src={imagesArray[0] || ""} 
+                          alt={product.name}
+                          className="w-full aspect-square object-cover group-hover:scale-105 transition-organic"
+                        />
+                        <div className="absolute top-3 left-3 space-y-1.5 flex flex-col items-start">
+                          {product.isNew && <Badge className="bg-primary text-primary-foreground">Novo</Badge>}
+                          <Badge variant="secondary">{product.category}</Badge>
+                        </div>
 
-              {selectedProduct.image && selectedProduct.image.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/40 backdrop-blur-sm p-1.5 rounded-lg z-40">
-                  {selectedProduct.image.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      onClick={() => setCurrentImgIdx(idx)}
-                      className={`w-10 h-10 object-cover rounded-md cursor-pointer border-2 transition-all ${currentImgIdx === idx ? 'border-amber-400 scale-105' : 'border-transparent opacity-70'}`}
-                    />
-                  ))}
+                        <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-organic flex items-center justify-center">
+                          <Button
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduct(product);
+                              setCurrentImgIdx(0);
+                            }}
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Visualizar Detalhes
+                          </Button>
+                        </div>
+                      </div>
+
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-1 mb-2">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="h-4 w-4 text-primary fill-primary" />
+                            ))}
+                          </div>
+                        </div>
+
+                        <h3 className="font-semibold text-lg text-foreground mb-2">{product.name}</h3>
+                        <p className="text-muted-foreground text-sm mb-4 truncate">{product.description}</p>
+                      </CardContent>
+                    </div>
+
+                    <CardContent className="p-6 pt-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl font-bold text-primary">{formatPrice(product.price)}</span>
+                          {product.originalPrice && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              {formatPrice(product.originalPrice)}
+                            </span>
+                          )}
+                        </div>
+                        <Button size="sm" variant="outline" onClick={(e) => handleAddToCart(product, e)}>
+                          <ShoppingCart className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Modal de Detalhes do Produto (Proporção 4:3) */}
+        <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+          {selectedProduct && (() => {
+            const imagesArray = getImagesArray(selectedProduct.image);
+
+            return (
+              <DialogContent className="max-w-xl bg-card/95 border border-border/80 text-foreground rounded-lg p-0 overflow-hidden shadow-2xl">
+                <div className="relative bg-muted">
+                  <img 
+                    src={imagesArray[currentImgIdx] || ""} 
+                    alt={selectedProduct.name} 
+                    className="w-full aspect-[4/3] object-cover"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setSelectedProduct(null)}
+                    className="absolute top-4 right-4 bg-background/80 hover:bg-background text-foreground rounded-full h-8 w-8 z-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+
+                  {imagesArray.length > 1 && (
+                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2 bg-background/60 backdrop-blur-sm p-1.5 rounded-md z-40">
+                      {imagesArray.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          onClick={() => setCurrentImgIdx(idx)}
+                          className={`w-10 h-10 object-cover rounded cursor-pointer border-2 transition-all ${currentImgIdx === idx ? 'border-primary scale-105' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="p-8 space-y-4">
-              {selectedProduct.category && (
-                <span className="bg-[#6A4E3A] text-amber-50 text-xs font-semibold px-3 py-1 rounded-full">
-                  {selectedProduct.category}
-                </span>
-              )}
+                <div className="p-8 space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedProduct.isNew && <Badge className="bg-primary text-primary-foreground">Novo</Badge>}
+                    <Badge variant="secondary">{selectedProduct.category}</Badge>
+                  </div>
 
-              <DialogTitle className="font-artisan text-3xl font-bold text-[#2A1E17]">
-                {selectedProduct.name}
-              </DialogTitle>
+                  <DialogTitle className="font-artisan text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground text-base leading-relaxed">
+                    {selectedProduct.description || "Sem descrição disponível para este produto da roça."}
+                  </DialogDescription>
 
-              <DialogDescription className="text-[#524338] text-base leading-relaxed">
-                {selectedProduct.description || "Sem descrição disponível para este produto da roça."}
-              </DialogDescription>
+                  <div className="flex items-center justify-between pt-6 border-t border-border/50">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-primary">{formatPrice(selectedProduct.price)}</span>
+                      {selectedProduct.originalPrice && (
+                        <span className="text-base text-muted-foreground line-through">
+                          {formatPrice(selectedProduct.originalPrice)}
+                        </span>
+                      )}
+                    </div>
 
-              <div className="flex items-center justify-between pt-6 border-t border-amber-900/10">
-                <span className="text-3xl font-bold text-amber-900">
-                  {formatPrice(selectedProduct.price)}
-                </span>
-
-                <Button 
-                  size="lg"
-                  className="bg-[#3D3028] hover:bg-[#2A1E17] text-amber-50 rounded-xl"
-                  onClick={() => {
-                    handleAddToCart(selectedProduct);
-                    setSelectedProduct(null); 
-                  }}
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Adicionar à Sacola
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
+                    <Button 
+                      size="lg"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={() => {
+                        handleAddToCart(selectedProduct);
+                        setSelectedProduct(null); 
+                      }}
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Adicionar à Sacola
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            );
+          })()}
+        </Dialog>
+      </main>
 
       <Footer />
     </div>
