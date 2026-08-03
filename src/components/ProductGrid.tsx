@@ -9,10 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { loadProducts, formatPrice, type Product } from "@/lib/products";
 import { loadProducers, type Producer } from "@/lib/producers";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 const ProductGrid = () => {
   const { toast } = useToast();
   const { addItem, openCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [producers, setProducers] = useState<Producer[]>([]);
   
@@ -48,9 +50,23 @@ const ProductGrid = () => {
     openCart();
   };
 
-  const handleWishlist = (name: string, e: React.MouseEvent) => {
+  const handleWishlist = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation(); 
-    toast({ title: "Lista de desejos", description: `${name} foi salvo.` });
+    const active = isInWishlist(product.id);
+
+    const imageString = Array.isArray(product.image) ? product.image[0] : product.image;
+
+    toggleWishlist({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: imageString
+    });
+
+    toast({ 
+      title: active ? "Removido dos favoritos" : "Salvo na lista de desejos!", 
+      description: product.name 
+    });
   };
 
   const getImagesArray = (img: string | string[]): string[] => {
@@ -83,6 +99,11 @@ const ProductGrid = () => {
             {products.map((product) => {
               const producer = producers.find((p) => p.id === product.producerId);
               const imagesArray = getImagesArray(product.image);
+              
+              // -------------------------------------------------------------
+              // DECLARAÇÃO DA VARIÁVEL QUE FALTAVA
+              // -------------------------------------------------------------
+              const isFav = isInWishlist(product.id);
 
               return (
                 <Card 
@@ -109,10 +130,14 @@ const ProductGrid = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-3 right-3 bg-background/80 hover:bg-background text-foreground"
-                        onClick={(e) => handleWishlist(product.name, e)}
+                        className="absolute top-3 right-3 bg-background/80 hover:bg-background text-foreground z-10"
+                        onClick={(e) => handleWishlist(product, e)}
                       >
-                        <Heart className="h-4 w-4" />
+                        <Heart 
+                          className={`h-4 w-4 transition-colors ${
+                            isFav ? "fill-red-500 text-red-500" : "text-muted-foreground"
+                          }`} 
+                        />
                       </Button>
 
                       <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-organic flex items-center justify-center">
